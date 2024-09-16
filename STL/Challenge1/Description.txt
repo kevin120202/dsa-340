@@ -25,7 +25,7 @@ if the are equal then it must be a palindrome. But we will use a deque.
 I am providing the main driver for you which will automatically run several test cases.
 You challenge is to write the following function:
 
-bool is_palindrome(const std::string &s) {
+bool is_palindrome(const std::string &s) 
 
 This function will expect a string and it must determine if that string is a palindrome and return true if it is, or false if it is not.
 

@@ -57,6 +57,8 @@
         "optional": "cpp",
         "queue": "cpp",
         "set": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp"
     }
 }
