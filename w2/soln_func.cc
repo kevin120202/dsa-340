@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
-#include <vector>
+#include <map>
+#include <algorithm>
 
 using namespace std;
 
@@ -37,13 +38,13 @@ int mm_score(string k, string g, int& b, int& w) {
     return b > 0 || w > 0 ? 1 : 0;
 }
 
-// int main() {
-//     string k = "abcd";
-//     string g = "dcba";
-//     int b = 0, w = 0;
+int main() {
+    string k = "RGBY";
+    string g = "GGRR";
+    int b = 0, w = 0;
 
-//     cout << mm_score(k, g, b, w) << endl;
-//     cout << "b: " << b << " w: " << w << endl;
+    cout << mm_score(k, g, b, w) << endl;
+    cout << "b: " << b << " w: " << w << endl;
 
-//     return 0;
-// }
+    return 0;
+}
