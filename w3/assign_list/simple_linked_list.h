@@ -5,99 +5,116 @@
 
 #include <iostream>
 
-#warning The provided version of simple_linked_list.h does not actually implement things.You will likely get compilation errors until you've at least partially implemented them. You can remove this warning once you've read it.
-
 template <typename T>
 template <typename ITERATOR> // constructor copying the contents of another container
 simple_linked_list <T>::simple_linked_list(ITERATOR beg, ITERATOR end) {
-    // Loop from beg to end
-    for (auto it = beg; it != end; it++) {
-        // Create a newNode
-        linked_node <T>* newNode = new new linked_node<T>(*it);
-        // If head = nullPtr, set head and tail = newNode
-        if (n_elements == 0) {
-            head = newNode;
-            tail = newNode;
-        }
-        else {
-            // Set tail->next to point to the newNode and update tail
-            tail->next = newNode;
-            tail = newNode;
-        }
-        n_elements++;
+    for (auto it = beg; it != end; ++it) {
+        push_back(*it);
     }
 }
 
 template <typename T>
 bool simple_linked_list<T>::empty() const {
-
+    return n_elements == 0;
 }
 
 template <typename T>
 simple_linked_iterator <T> simple_linked_list<T>::begin() {
-
+    return simple_linked_iterator<T>(head);
 }
 
 template <typename T>
 simple_linked_iterator <T> simple_linked_list<T>::end() {
-    // XXX Not implemented. Write the code that goes here..
+    return simple_linked_iterator<T>(tail->next);
 }
 
 template <typename T>
 T& simple_linked_list<T>::front() {
-    // XXX Not implemented. Write the code that goes here..
+    return head->data;
 }
 
 template <typename T>
 T& simple_linked_list<T>::back() {
-    // XXX Not implemented. Write the code that goes here..
+    return tail->data;
 }
 
 template <typename T>
 void simple_linked_list<T>::pop_back() {
-    // XXX Not implemented. Write the code that goes here..
+    if (n_elements == 0) return;
+    if (n_elements == 1) {
+        delete head;
+        head = tail = nullptr;
+    }
+    else {
+        linked_node<T>* temp = head;
+        while (temp->next != tail) {
+            temp = temp->next;
+        }
+        delete tail;
+        tail = temp;
+        tail->next = nullptr;
+    }
+    --n_elements;
 }
 
 template <typename T>
 void simple_linked_list<T>::push_back(const T& x) {
-    // XXX Not implemented. Write the code that goes here..
+    linked_node<T>* newNode = new linked_node<T>(x);
+    if (n_elements == 0) {
+        head = tail = newNode;
+    }
+    else {
+        tail->next = newNode;
+        tail = newNode;
+    }
+    tail->next = nullptr;
+    ++n_elements;
 }
 
 template <typename T>
 simple_linked_list<T>::~simple_linked_list() {
-    // XXX Not implemented. Write the code that goes here..
+    clear();
 }
 
 template <class T>
 size_t simple_linked_list<T>::size() const {
-    // XXX Not implemented. Write the code that goes here..
+    return n_elements;
 }
 
 template <typename T>
 void simple_linked_list<T>::clear() {
-    // XXX Not implemented. Write the code that goes here..
+    while (head != nullptr) {
+        linked_node<T>* temp = head;
+        head = head->next;
+        delete temp;
+    }
+    tail = nullptr;
+    n_elements = 0;
 }
 
 // IMPLEMENTATIONS FOR ITERATOR
 
 template <typename T>
 bool simple_linked_iterator<T>::operator == (const simple_linked_iterator <T>& other) const {
-    // XXX Not implemented. Write the code that goes here..
+    return pos == other.pos;
 }
 
 template <typename T>
 simple_linked_iterator <T>& simple_linked_iterator <T>::operator ++ () { // preincrement
-    // XXX Not implemented. Write the code that goes here..
+    pos = pos->next;
+    return *this;
 }
 
 template <typename T>
 simple_linked_iterator <T> simple_linked_iterator<T>::operator ++ (int) { // postincrement
-    // XXX Not implemented. Write the code that goes here..
+    simple_linked_iterator<T> temp = *this;
+    pos = pos->next;
+    return temp;
 }
 
 template <typename T>
 T& simple_linked_iterator<T>::operator * () { // dereference operator
-    // XXX Not implemented. Write the code that goes here..
+    return pos->data;
 }
 
 #endif
