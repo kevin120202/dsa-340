@@ -59,6 +59,21 @@
         "set": "cpp",
         "stack": "cpp",
         "iterator": "cpp",
-        "memory_resource": "cpp"
-    }
+        "memory_resource": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "condition_variable": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "memory": "cpp",
+        "forward_list": "cpp",
+        "future": "cpp",
+        "print": "cpp",
+        "regex": "cpp",
+        "scoped_allocator": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
+    "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }
