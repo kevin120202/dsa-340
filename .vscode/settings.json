@@ -72,8 +72,21 @@
         "regex": "cpp",
         "scoped_allocator": "cpp",
         "typeindex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "any": "cpp",
+        "barrier": "cpp",
+        "codecvt": "cpp",
+        "cuchar": "cpp",
+        "latch": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "shared_mutex": "cpp",
+        "source_location": "cpp",
+        "span": "cpp",
+        "syncstream": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
-    "C_Cpp.default.compilerPath": "/usr/bin/clang++"
+    "C_Cpp.default.compilerPath": "/usr/bin/clang",
+    "workbench.editor.enablePreview": false,
+    "editor.minimap.enabled": false
 }
