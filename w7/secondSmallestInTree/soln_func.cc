@@ -1,38 +1,58 @@
 #include <iostream>
-#include <set>
+#include <vector>
 
-class TreeNode {
-public:
-    TreeNode *left, *right;
-    int value;
+using namespace std;
 
-    TreeNode(int val) : left(nullptr), right(nullptr), value(val) {}
-};
+vector<int> RotatingCornerSpiral(vector<vector<int>> &m) {
+  // Check if the matrix is square
+  if (m.empty() || m.size() != m[0].size()) {
+    return {}; // Return empty vector if not square
+  }
 
-void inOrder(TreeNode* node, std::set<int>& uniqueValues) {
-    if (!node) return;
-    inOrder(node->left, uniqueValues);
-    uniqueValues.insert(node->value);
-    inOrder(node->right, uniqueValues);
-}
+  int n = m.size();
+  vector<int> result;
+  int layers = (n + 1) / 2; // Number of layers in the square
 
-bool secondsmallest(TreeNode *root, int &val) {
-    std::set<int> uniqueValues;
-    inOrder(root, uniqueValues);
+  for (int layer = 0; layer < layers; ++layer) {
+    // Get the corners of the current layer
+    int start = layer;
+    int end = n - layer - 1;
 
-    if (uniqueValues.size() < 2) {
-        return false; // Not enough unique values
+    // Start visiting the corners in a clockwise manner
+    for (int i = 0; i < 4; ++i) {
+      if (i == 0) { // Top row
+        for (int j = start; j <= end; ++j) {
+          result.push_back(m[start][j]);
+        }
+      } else if (i == 1) { // Right column
+        for (int j = start + 1; j <= end; ++j) {
+          result.push_back(m[j][end]);
+        }
+      } else if (i == 2) { // Bottom row
+        for (int j = end; j >= start; --j) {
+          result.push_back(m[end][j]);
+        }
+      } else if (i == 3) { // Left column
+        for (int j = end - 1; j >= start + 1; --j) {
+          result.push_back(m[j][start]);
+        }
+      }
     }
 
-    auto it = uniqueValues.begin();
-    ++it; // Move to the second smallest value
-    val = *it;
-    return true; // Found second smallest
+    // Rotate corners for the next layer
+    if (layer < layers - 1) {
+      // Update corners for the next layer (rotate clockwise)
+      int topLeft = m[start][start];
+      int topRight = m[start][end];
+      int bottomRight = m[end][end];
+      int bottomLeft = m[end][start];
+
+      m[start][start] = bottomLeft; // top-left = bottom-left
+      m[start][end] = topLeft;      // top-right = top-left
+      m[end][end] = topRight;       // bottom-right = top-right
+      m[end][start] = bottomRight;  // bottom-left = bottom-right
+    }
+  }
+
+  return result;
 }
-
-
-
-
-
-
-
