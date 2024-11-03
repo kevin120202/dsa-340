@@ -4,9 +4,9 @@
 #include <vector>
 #include <map>
 #include <queue>
-#include "nodes.h" // Assuming XMLNODE and xml_element are defined here
-#include "bintree.h" // Assuming the necessary binary tree utilities are defined here
-#include "xml.h" // Assuming xml_tree_state is defined here
+#include "nodes.h"
+#include "bintree.h" 
+#include "xml.h" 
 
 // xml_handle_tag
 int xml_handle_tag(std::string &tagstring, xml_tree_state &state, bool verbose) {
