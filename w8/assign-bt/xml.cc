@@ -1,177 +1,312 @@
+/************************************************************************************
+ ** NIU CSCI 340 Section 2 * Assignment #7 Kevin Dela Paz - z2017241 *
+ **
+ * I certify that everything I am submitting is either provided by the professor
+ *for use in * the assignment, or work done by me personally. I understand that
+ *if I am caught submitting * the work of others (including StackOverflow or
+ *ChatGPT) as my own is an act of Academic * Misconduct and will be punished as
+ *such. *
+ ************************************************************************************/
+
 #include <iostream>
-#include <string>
 #include <sstream>
-#include <vector>
+#include <string>
+#include <algorithm>
+#include <fstream>
 #include <map>
 #include <queue>
-#include "nodes.h"
-#include "bintree.h" 
-#include "xml.h" 
+#include "nodes.h" 
+#include "bintree.h"
+#include "xml.h"
 
-// xml_handle_tag
-int xml_handle_tag(std::string &tagstring, xml_tree_state &state, bool verbose) {
-    if (tagstring.empty() || tagstring.size() < 3 || tagstring.front() != '<' || tagstring.back() != '>') {
-        if (verbose) std::cerr << "Error: Invalid tag format: " << tagstring << std::endl;
-        return 1;
-    }
+using namespace std;
 
-    int errors = 0;
-    bool is_closing_tag = (tagstring[1] == '/');
-    std::string content = tagstring.substr(1, tagstring.size() - 2);
-
-    if (is_closing_tag) {
-        std::string tag_name = content.substr(1);  // Skip '/'
-        errors += xml_close_tag(tag_name, state, verbose);
-    } else {
-        std::string::size_type space_pos = content.find(' ');
-        std::string tag_name = (space_pos == std::string::npos) ? content : content.substr(0, space_pos);
-        
-        xml_element element;
-        element.type = tag;
-        element.name = tag_name;
-
-        if (space_pos != std::string::npos) {
-            std::string attr_str = content.substr(space_pos + 1);
-            errors += xml_handle_attributes(attr_str, element.attrs, verbose);
-        }
-        
-        errors += xml_add_node(element, state, verbose);
-    }
-
-    return errors;
-}
-
-// xml_handle_attributes
-int xml_handle_attributes(const std::string &input, std::map<std::string, std::string> &attrs, bool verbose) {
-    int errors = 0;
-    std::string::size_type pos = 0;
-
-    while (pos < input.size()) {
-        std::string::size_type equals_pos = input.find('=', pos);
-        if (equals_pos == std::string::npos || equals_pos == pos || input[equals_pos + 1] != '"') {
-            if (verbose) std::cerr << "Error: Invalid attribute format in \"" << input << "\"" << std::endl;
-            return ++errors;
-        }
-
-        std::string key = input.substr(pos, equals_pos - pos);
-        std::string::size_type quote_end = input.find('"', equals_pos + 2);
-        if (quote_end == std::string::npos) {
-            if (verbose) std::cerr << "Error: Missing closing quote for attribute value." << std::endl;
-            return ++errors;
-        }
-
-        std::string value = input.substr(equals_pos + 2, quote_end - (equals_pos + 2));
-        attrs[key] = value;
-        pos = quote_end + 1;
-    }
-
-    return errors;
-}
-
-// xml_handle_plaintext
-int xml_handle_plaintext(std::string &plaintext, xml_tree_state &state, bool verbose) {
-    xml_element element;
-    element.type = plain;
-    element.fulltext = plaintext;
-    return xml_add_node(element, state, verbose);
-}
-
-// xml_add_node
-int xml_add_node(const xml_element &element, xml_tree_state &state, bool verbose) {
-    if (!state.cur) {
-        state.root = new NodeLRP<xml_element>(element);
-        state.cur = state.root;
-        return 0;
-    }
-
-    if (state.cur->data.type == plain || state.cur->data.closed) {
-        state.cur->right = new NodeLRP<xml_element>(element);
-        state.cur->right->parent = state.cur->parent;
-        state.cur = state.cur->right;
-    } else {
-        state.cur->left = new NodeLRP<xml_element>(element);
-        state.cur->left->parent = state.cur;
-        state.cur = state.cur->left;
-    }
-
-    return 0;
-}
-
-// xml_close_tag
-int xml_close_tag(const std::string name, xml_tree_state &state, bool verbose) {
-    if (!state.cur || state.cur->data.name != name) {
-        if (verbose) std::cerr << "Error: Closing tag does not match the current open tag: " << name << std::endl;
-        return 1;
-    }
-
-    state.cur->data.closed = true;
-    state.cur = state.cur->parent;
-    return 0;
-}
-
-// xml_find_by_name
-std::vector<NodeLRP<xml_element>*> xml_find_by_name(NodeLRP<xml_element>* root, const std::string &name) {
-    std::vector<NodeLRP<xml_element>*> matching_nodes;
-
-    if (!root) return matching_nodes;
-    if (root->data.name == name) matching_nodes.push_back(root);
-
-    auto left_matches = xml_find_by_name(root->left, name);
-    auto right_matches = xml_find_by_name(root->right, name);
-
-    matching_nodes.insert(matching_nodes.end(), left_matches.begin(), left_matches.end());
-    matching_nodes.insert(matching_nodes.end(), right_matches.begin(), right_matches.end());
-
-    return matching_nodes;
-}
-
-// xml_find_with_attr
-std::vector<NodeLRP<xml_element>*> xml_find_with_attr(NodeLRP<xml_element>* root, const std::string &attrname) {
-    std::vector<NodeLRP<xml_element>*> matching_nodes;
-
-    if (!root) return matching_nodes;
-    if (root->data.attrs.find(attrname) != root->data.attrs.end()) {
-        matching_nodes.push_back(root);
-    }
-
-    auto left_matches = xml_find_with_attr(root->left, attrname);
-    auto right_matches = xml_find_with_attr(root->right, attrname);
-
-    matching_nodes.insert(matching_nodes.end(), left_matches.begin(), left_matches.end());
-    matching_nodes.insert(matching_nodes.end(), right_matches.begin(), right_matches.end());
-
-    return matching_nodes;
-}
-
-// to_string
+/**
+ * @brief Converts an XML element to a string representation, either as an opening or closing tag.
+ * 
+ * @param element The XML element to convert to a string.
+ * @param opening Boolean flag indicating whether to generate an opening tag (true) or closing tag (false).
+ * @return A string representation of the XML.
+ */
 std::string to_string(const xml_element &element, bool opening) {
     std::ostringstream output;
-
-    if (element.type == tag) {
+    // Check if the element is plain text or a tag
+    if (element.type == xml_type::plain) {
+        output << element.fulltext;  
+    } else {
         if (opening) {
-            output << "<" << element.name;
-            for (const auto& [key, value] : element.attrs) {
+            output << "<" << element.name; 
+            // Append each attribute in the format: key="value"
+            for (const auto &[key, value] : element.attrs) {
                 output << " " << key << "=\"" << value << "\"";
             }
             output << ">";
         } else {
-            output << "</" << element.name << ">";
+            output << "</" << element.name << ">"; 
         }
-    } else {
-        output << element.fulltext;
     }
-
     return output.str();
 }
 
-// xml_print_subtree
-void xml_print_subtree(NodeLRP<xml_element>* root, std::ostream &ost) {
-    if (!root) return;
-    
-    ost << to_string(root->data, true);
-    if (root->left) xml_print_subtree(root->left, ost);
-    ost << to_string(root->data, false);
-    
-    if (root->right) xml_print_subtree(root->right, ost);
+/**
+ * @brief Finds all nodes with the specified tag name in the XML tree.
+ * 
+ * @param root The root node of the XML tree.
+ * @param name The name of the tag to search for.
+ * @return A vector of pointers to XML nodes that match the tag name.
+ */
+std::vector<XMLNODE *> xml_find_by_name(XMLNODE *root, const std::string &name) {
+    std::vector<XMLNODE *> result;
+    // Preorder traversal to search for matching nodes by tag name
+    preorder(root, [&result, &name](XMLNODE *node) {
+        if (node->data.type == xml_type::tag && node->data.name == name) {
+            result.push_back(node);
+        }
+    });
+    return result;
 }
 
+/**
+ * @brief Finds all nodes that contain the specified attribute.
+ * 
+ * @param root The root node of the XML tree.
+ * @param attrname The name of the attribute to search for.
+ * @return A vector of pointers to XML nodes that contain the specified attribute.
+ */
+std::vector<XMLNODE *> xml_find_with_attr(XMLNODE *root, const std::string &attrname) {
+    std::vector<XMLNODE *> result;
+    // Preorder traversal to search for nodes with the specified attribute
+    preorder(root, [&result, &attrname](XMLNODE *node) {
+        if (node->data.attrs.find(attrname) != node->data.attrs.end()) {
+            result.push_back(node);  // Add node if attribute is found
+        }
+    });
+    return result;
+}
+
+/**
+ * @brief Adds a new XML element to the XML tree.
+ * 
+ * @param element The XML element to add to the tree.
+ * @param state The current XML tree state.
+ * @param verbose Flag for verbose output.
+ * @return 0 on successful addition.
+ */
+int xml_add_node(const xml_element &element, xml_tree_state &state, bool verbose) {
+    XMLNODE *new_node = new XMLNODE(element);
+
+    // Check if the tree has a root node
+    if (!state.root) {
+        state.root = state.cur = new_node;
+    } else if (!state.cur->data.closed) {
+        // Add new node as a child
+        new_node->parent = state.cur;
+        if (!state.cur->left) {
+            state.cur->left = new_node;
+        } else {
+            XMLNODE *sibling = state.cur->left;
+            while (sibling->right) {
+                sibling = sibling->right;
+            }
+            sibling->right = new_node;
+        }
+    } else {
+        // Add new node as a sibling to the current node
+        new_node->parent = state.cur->parent;
+        state.cur->right = new_node;
+    }
+    state.cur = new_node;
+    return 0;
+}
+
+/**
+ * @brief Closes an open XML tag in the XML tree.
+ * 
+ * @param name The name of the tag to close.
+ * @param state The current XML tree state.
+ * @param verbose Flag for verbose output.
+ * @return 0 if successfully closed, 1 if an error occurs.
+ */
+int xml_close_tag(const std::string name, xml_tree_state &state, bool verbose) {
+    // Check if the current node matches the tag to close
+    if (state.cur && state.cur->data.name == name) {
+        state.cur->data.closed = true; 
+        return 0;
+    }
+
+    // Traverse up the tree to find an open tag with the matching name
+    XMLNODE *currentParent = (state.cur == nullptr) ? nullptr : state.cur->parent;
+
+    while (currentParent) {
+        if (currentParent->data.name == name) {
+            currentParent->data.closed = true;
+            state.cur = currentParent;
+            return 0;
+        }
+        currentParent = tilted_find_parent(currentParent);
+    }
+
+    // No matching open tag found; report error if verbose
+    if (verbose) {
+        std::cout << "Error: No matching open tag for " << name << std::endl;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Handles an XML tag, determining if it's an opening or closing tag and processing it accordingly.
+ * 
+ * @param tagstring The XML tag string to handle.
+ * @param state The current XML tree state.
+ * @param verbose Flag for verbose output.
+ * @return Error count; 0 if no errors.
+ */
+int xml_handle_tag(std::string &tagstring, xml_tree_state &state, bool verbose) {
+    if (tagstring.empty() || tagstring.front() != '<' || tagstring.back() != '>') {
+        if (verbose) {
+            std::cerr << "ERROR: Invalid tag format: " << tagstring << std::endl;
+        }
+        return 1;
+    }
+
+    // Determine if this is a closing tag
+    bool isClosingTag = tagstring[1] == '/';
+    std::string tagContent = tagstring.substr(isClosingTag ? 2 : 1, tagstring.size() - (isClosingTag ? 3 : 2));
+    std::istringstream tagStream(tagContent);
+    std::string tagName;
+    tagStream >> tagName;
+
+    if (tagName.empty()) {
+        if (verbose) {
+            std::cerr << "ERROR: Empty tag name in: " << tagstring << std::endl;
+        }
+        return 1;
+    }
+
+    // If it's a closing tag, attempt to close it
+    if (isClosingTag) {
+        return xml_close_tag(tagName, state, verbose);
+    }
+
+    // Parse attributes if it’s an opening tag
+    std::map<std::string, std::string> attributeMap;
+    std::string remainingContent;
+    getline(tagStream, remainingContent);
+
+    int attributeErrors = xml_handle_attributes(remainingContent, attributeMap);
+    if (attributeErrors > 0 && verbose) {
+        std::cerr << "ERROR: Invalid attributes in tag: " << tagstring << std::endl;
+    }
+
+    // Add new element as a node
+    xml_element xmlElem(xml_type::tag, tagName, tagstring, attributeMap);
+    return xml_add_node(xmlElem, state, verbose);
+}
+
+/**
+ * @brief Handles plain text content within XML and adds it to the XML tree.
+ * 
+ * @param plaintext The plain text string.
+ * @param state The current XML tree state.
+ * @param verbose Flag for verbose output.
+ * @return 0 on success.
+ */
+int xml_handle_plaintext(std::string &plaintext, xml_tree_state &state, bool verbose) {
+    xml_element element(xml_type::plain, "", plaintext, {});
+    return xml_add_node(element, state, verbose);
+}
+
+/**
+ * @brief Parses and handles attributes within an XML tag.
+ * 
+ * @param input The attribute string to parse.
+ * @param attrs Map to store parsed attributes.
+ * @param verbose Flag for verbose output.
+ * @return Number of valid attributes processed.
+ */
+int xml_handle_attributes(const std::string &input, std::map<std::string, std::string> &attrs, bool verbose) {
+    int validCount = 0;
+    size_t currentIndex = 0;
+
+    // Skip leading whitespace
+    while (currentIndex < input.size() && isspace(input[currentIndex])) {
+        ++currentIndex;
+    }
+
+    // Parse each attribute in the input
+    while (currentIndex < input.size()) {
+        std::string attributeKey;
+
+        // Extract attribute key before the '='
+        while (currentIndex < input.size() && isalnum(input[currentIndex])) {
+            attributeKey += input[currentIndex];
+            ++currentIndex;
+        }
+
+        // Look for the '=' and ensure the next character is a quote
+        if (currentIndex < input.size() && input[currentIndex] == '=') {
+            ++currentIndex;
+            if (currentIndex < input.size() && input[currentIndex] == '"') {
+                ++currentIndex;
+                std::string attributeValue;
+
+                // Extract attribute value within quotes
+                while (currentIndex < input.size() && input[currentIndex] != '"') {
+                    attributeValue += input[currentIndex];
+                    ++currentIndex;
+                }
+
+                // Store valid key-value pairs
+                if (currentIndex < input.size() && input[currentIndex] == '"') {
+                    ++currentIndex;
+                    attrs[attributeKey] = attributeValue;
+                    validCount++;
+                } else {
+                    if (verbose) std::cout << "Error: Missing closing quote.\n";
+                    return 0;
+                }
+            } else {
+                if (verbose) std::cout << "Error: Missing opening quote.\n";
+                return 0;
+            }
+        } else {
+            if (verbose) std::cout << "Error: Invalid attribute format.\n";
+            return 0;
+        }
+
+        // Skip whitespace between attributes
+        while (currentIndex < input.size() && isspace(input[currentIndex])) {
+            ++currentIndex;
+        }
+    }
+    return validCount;
+}
+
+/**
+ * @brief Recursively prints the XML subtree starting from the given node.
+ * 
+ * @param root The root node of the subtree to print.
+ * @param ost The output stream to print to.
+ */
+void xml_print_subtree(XMLNODE *root, std::ostream &ost) {
+    if (!root) return;
+
+    // Print opening tag or plain text content
+    if (root->data.type == xml_type::tag) {
+        ost << to_string(root->data, true);
+    } else {
+        ost << root->data.fulltext;
+        return;
+    }
+
+    // Recursively print children nodes
+    for (XMLNODE *childNode = root->left; childNode; childNode = childNode->right) {
+        xml_print_subtree(childNode, ost);
+    }
+
+    // Print closing tag if applicable
+    if (root->data.type == xml_type::tag) {
+        ost << to_string(root->data, false);
+    }
+}
