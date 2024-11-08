@@ -84,7 +84,8 @@
     "source_location": "cpp",
     "span": "cpp",
     "syncstream": "cpp",
-    "climits": "cpp"
+    "climits": "cpp",
+    "type_traits": "cpp"
   },
   "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
   "C_Cpp.default.compilerPath": "/usr/bin/clang",
