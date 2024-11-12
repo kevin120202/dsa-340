@@ -4,17 +4,18 @@
 #include "bintree.decl.h"
 #include <queue>
 
-// height of tree, defined as the number of edges in the longest path
-// from the root to a leaf. If you're off the tree, this should return -1.
 template <typename NODE>
-int height(NODE * node) {
-  // XXX You need to implement this
-  return 9999999;
+int height(NODE* node) {
+    if (!node) return -1;
+    int leftHeight = height(node->left);
+    int rightHeight = height(node->right);
+    return 1 + std::max(leftHeight, rightHeight);
 }
+
 template <typename NODE>
-int count(NODE * root) {
-  // XXX You need to implement this
-  return 9999999;
+int count(NODE* root) {
+    if (!root) return 0;
+    return 1 + count(root->left) + count(root->right);
 }
 
 /**
