@@ -1,3 +1,13 @@
+/************************************************************************************
+ ** NIU CSCI 340 Section 2 * Assignment #8 Kevin Dela Paz - z2017241 *
+ **
+ * I certify that everything I am submitting is either provided by the professor
+ *for use in * the assignment, or work done by me personally. I understand that
+ *if I am caught submitting * the work of others (including StackOverflow or
+ *ChatGPT) as my own is an act of Academic * Misconduct and will be punished as
+ *such. *
+ ************************************************************************************/
+
 #ifndef LEHUTA_BINTREE_H_IMPL
 #define LEHUTA_BINTREE_H_IMPL
 

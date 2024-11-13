@@ -1,3 +1,13 @@
+/************************************************************************************
+ ** NIU CSCI 340 Section 2 * Assignment #8 Kevin Dela Paz - z2017241 *
+ **
+ * I certify that everything I am submitting is either provided by the professor
+ *for use in * the assignment, or work done by me personally. I understand that
+ *if I am caught submitting * the work of others (including StackOverflow or
+ *ChatGPT) as my own is an act of Academic * Misconduct and will be punished as
+ *such. *
+ ************************************************************************************/
+
 #ifndef NIU_CSCI340_BST_H_IMPL
 #define NIU_CSCI340_BST_H_IMPL
 
@@ -6,139 +16,172 @@
 #include <iostream>
 #include <algorithm>
 
+/**
+ * @brief Finds a node with the specified value in a binary search tree.
+ * 
+ * @tparam NODE The node type.
+ * @tparam T The type of the value being searched.
+ * @param root Pointer to the root node of the tree.
+ * @param value The value to search for.
+ * @return Pointer to the node with the specified value, or nullptr if not found.
+ */
 template <typename NODE, typename T>
 NODE* bst_find(NODE* root, const T& value) {
-    if (!root) return nullptr;
-    if (root->data == value) return root;
+    if (!root) return nullptr; // (base case)
+    if (root->data == value) return root; // Return node if value matches
+    // Recur down the left or right subtree based on value comparison
     return (value < root->data) ? bst_find(root->left, value) : bst_find(root->right, value);
 }
 
-
-// Insert a node with a specific value
+/**
+ * @brief Inserts a node with a specific value into the binary search tree.
+ * 
+ * @tparam NODEP The node type.
+ * @tparam T The type of the value to insert.
+ * @param root Reference to the pointer of the root node of the tree.
+ * @param value The value to insert.
+ * @return Pointer to the newly inserted node, or nullptr if the value already exists.
+ */
 template <typename NODEP, typename T>
 NODEP* bst_insert(NODEP*& root, const T& value) {
-    if (!root) {
+    if (!root) { // If the tree is empty, insert at root
         root = new NODEP(value);
         return root;
     }
-    NODEP* parent = nullptr;
-    NODEP* current = root;
-    while (current) {
+    NODEP* parent = nullptr; // Pointer to keep track of the parent node
+    NODEP* current = root; // Start from the root node
+    while (current) { // Traverse the tree to find insertion point
         parent = current;
-        if (value < current->data) current = current->left;
-        else if (value > current->data) current = current->right;
-        else return nullptr;  // Value already exists
+        if (value < current->data)
+            current = current->left;
+        else if (value > current->data)
+            current = current->right;
+        else
+            return nullptr;
     }
 
+    // Create new node and set parent link
     NODEP* newNode = new NODEP(value);
     newNode->parent = parent;
+    // Attach the new node as a left or right child
     if (value < parent->data) parent->left = newNode;
     else parent->right = newNode;
     return newNode;
 }
 
-// Remove node and print tree state after each removal
+/**
+ * @brief Removes a node with a specific value from the binary search tree.
+ * 
+ * @tparam NODEP The node type.
+ * @tparam T The type of the value to remove.
+ * @param root Reference to the pointer of the root node of the tree.
+ * @param value The value to remove.
+ * @return Pointer to the removed node, or nullptr if the node was not found.
+ */
 template <typename NODEP, typename T>
 NODEP* bst_remove_value(NODEP*& root, const T& value) {
-    NODEP* nodeToDelete = bst_find(root, value);
-    if (!nodeToDelete) return nullptr;  // Node not found
+    NODEP* node = bst_find(root, value); // Step 1: Find the node to remove
+    if (!node) return nullptr; 
 
-    // Case 1: Node has no children
-    if (!nodeToDelete->left && !nodeToDelete->right) {
-        if (nodeToDelete->parent) {
-            if (nodeToDelete->parent->left == nodeToDelete) 
-                nodeToDelete->parent->left = nullptr;
-            else 
-                nodeToDelete->parent->right = nullptr;
-        } else {
-            root = nullptr;
-        }
+    NODEP* parent = node->parent; // Get the parent node
+    NODEP* replacement = nullptr; // Initialize replacement node
+
+    if (!node->left || !node->right) { // Case 1: Node has at most one child
+        replacement = node->left ? node->left : node->right;
+        if (replacement) replacement->parent = parent; // Set replacement's parent
+
+        if (!parent) root = replacement; // Node to delete is root
+        else if (parent->left == node) parent->left = replacement;
+        else parent->right = replacement; 
+        
+        delete node; // Remove node
+    } else { // Case 2: Node has two children
+        NODEP* successor = bst_minimum(node->right); // Find in-order successor
+        node->data = successor->data;
+
+        // Remove the successor node
+        if (successor->parent->left == successor) successor->parent->left = successor->right;
+        else successor->parent->right = successor->right;
+
+        if (successor->right) successor->right->parent = successor->parent; // Update child's parent
+
+        delete successor; // Delete the successor
     }
-    // Case 2: Node has two children
-    else if (nodeToDelete->left && nodeToDelete->right) {
-        NODEP* succ = successor(nodeToDelete);
-        if (succ) {
-            nodeToDelete->data = succ->data;  // Copy successor's data
-            if (succ->parent->left == succ) 
-                succ->parent->left = succ->right;
-            else 
-                succ->parent->right = succ->right;
-            
-            if (succ->right)
-                succ->right->parent = succ->parent;
-
-            delete succ;
-        }
-    }
-    // Case 3: Node has one child
-    else {
-        NODEP* child = nodeToDelete->left ? nodeToDelete->left : nodeToDelete->right;
-        child->parent = nodeToDelete->parent;
-        if (nodeToDelete->parent) {
-            if (nodeToDelete->parent->left == nodeToDelete) 
-                nodeToDelete->parent->left = child;
-            else 
-                nodeToDelete->parent->right = child;
-        } else {
-            root = child;  // Node to delete is the root node
-        }
-    }
-
-    delete nodeToDelete;
-
-    // Output tree state after deletion
-    std::cout << "  preorder:   "; preorder(root, [](NODEP* node) { std::cout << node->data << " "; }); std::cout << "\n";
-    std::cout << "  inorder:    "; inorder(root, [](NODEP* node) { std::cout << node->data << " "; }); std::cout << "\n";
-    std::cout << "  postorder:  "; postorder(root, [](NODEP* node) { std::cout << node->data << " "; }); std::cout << "\n";
-    std::cout << "  levelorder: "; levelorder(root, [](NODEP* node) { std::cout << node->data << " "; }); std::cout << "\n";
-    std::cout << "  count: " << count(root)
-              << "; root: " << (root ? std::to_string(root->data) : "none")
-              << "; min: " << (root ? std::to_string(bst_minimum(root)->data) : "none")
-              << "; max: " << (root ? std::to_string(bst_maximum(root)->data) : "none")
-              << "; height: " << height(root)
-              << "; is_bst: " << (is_bst(root) ? "true" : "false") << "\n";
-
-    return root;
+    return node;
 }
 
-// Check if the tree is a BST
+/**
+ * @brief Helper function to check if a tree is a binary search tree.
+ * 
+ * @tparam NODE The node type.
+ * @param root Pointer to the root node of the tree.
+ * @param minNode Pointer to the minimum  node.
+ * @param maxNode Pointer to the maximum  node.
+ * @return True if the tree is a binary search tree, false otherwise.
+ */
 template <typename NODE>
 bool is_bst_helper(NODE* root, NODE* minNode, NODE* maxNode) {
-    if (!root) return true;
+    if (!root) return true; // Base case
+    // Check for violations of BST properties
     if ((minNode && root->data <= minNode->data) || (maxNode && root->data >= maxNode->data)) return false;
+    // Recursively check left and right subtrees
     return is_bst_helper(root->left, minNode, root) && is_bst_helper(root->right, root, maxNode);
 }
 
+/**
+ * @brief Checks if a binary tree is a binary search tree.
+ * 
+ * @tparam NODE The node type.
+ * @param root Pointer to the root node of the tree.
+ * @return True if the tree is a binary search tree, false otherwise.
+ */
 template <typename NODE>
 bool is_bst(NODE* root) {
-    return is_bst_helper(root, static_cast<NODE*>(nullptr), static_cast<NODE*>(nullptr));
+    return is_bst_helper(root, static_cast<NODE*>(nullptr), static_cast<NODE*>(nullptr)); 
 }
 
-
-// Find the minimum value node
+/**
+ * @brief Finds the node with the minimum value in a binary search tree.
+ * 
+ * @tparam NODE The node type.
+ * @param root Pointer to the root node of the tree.
+ * @return Pointer to the node with the minimum value.
+ */
 template <typename NODE>
 NODE* bst_minimum(NODE* root) {
     while (root && root->left) root = root->left;
     return root;
 }
 
-// Find the maximum value node
+/**
+ * @brief Finds the node with the maximum value in a binary search tree.
+ * 
+ * @tparam NODE The node type.
+ * @param root Pointer to the root node of the tree.
+ * @return Pointer to the node with the maximum value.
+ */
 template <typename NODE>
 NODE* bst_maximum(NODE* root) {
-    while (root && root->right) root = root->right;
-    return root;
+    while (root && root->right) root = root->right; // Traverse right to find maximum
+    return root; 
 }
 
-// Find the successor of a node
+/**
+ * @brief Finds the successor of a given node in a binary search tree.
+ * 
+ * @tparam NODEP The node type.
+ * @param node Pointer to the node for which to find the successor.
+ * @return Pointer to the successor node, or nullptr if there is no successor.
+ */
 template <typename NODEP>
 NODEP* successor(NODEP* node) {
-    if (node->right) return bst_minimum(node->right);
-    NODEP* parent = node->parent;
-    while (parent && node == parent->right) {
+    if (node->right) return bst_minimum(node->right); // Successor is the minimum in the right subtree
+    NODEP* parent = node->parent; // Start from the parent of the node
+    while (parent && node == parent->right) { 
         node = parent;
         parent = parent->parent;
     }
-    return parent;
+    return parent; 
 }
 
 #endif
