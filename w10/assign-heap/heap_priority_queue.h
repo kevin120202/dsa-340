@@ -8,7 +8,7 @@
  * @brief Constructs a priority queue from a range of elements.
  * @tparam T Type of the elements in the priority queue.
  * @tparam CONTAINER Type of the underlying container for the heap.
- * @tparam COMPARE Comparison function type (e.g., less or greater).
+ * @tparam COMPARE Comparison function type.
  * @tparam ITERATOR Iterator type for the input range.
  * @param begin Iterator pointing to the start of the range.
  * @param end Iterator pointing to the end of the range.
@@ -18,6 +18,8 @@ template <class ITERATOR>
 heap_priority_queue<T, CONTAINER, COMPARE>::heap_priority_queue(ITERATOR begin, ITERATOR end) {
     data.insert(data.end(), begin, end);
     nodes = data.size();
+
+    // Convert the container into a valid heap in-place
     heapify_in_place_down(data.begin(), data.end(), compare);
 }
 
@@ -51,7 +53,7 @@ size_t heap_priority_queue<T, CONTAINER, COMPARE>::size() const {
 }
 
 /**
- * @brief Pushes a new element into the priority queue and maintains the heap property.
+ * @brief Pushes a new element into the priority queue.
  * @param x The element to push into the priority queue.
  */
 template <class T, class CONTAINER, class COMPARE>
@@ -62,15 +64,22 @@ void heap_priority_queue<T, CONTAINER, COMPARE>::push(const T &x) {
 }
 
 /**
- * @brief Removes the top element from the priority queue and maintains the heap property.
+ * @brief Removes the top element from the priority queue.
  * @throws std::runtime_error if the priority queue is empty.
  */
 template <class T, class CONTAINER, class COMPARE>
 void heap_priority_queue<T, CONTAINER, COMPARE>::pop() {
+    // exception if the heap is empty
     if (nodes == 0) throw std::runtime_error("Heap is empty");
+
+    // Swap the root element with the last element in the container
     std::swap(data[0], data[nodes - 1]);
+
     data.pop_back();
+
     --nodes;
+
+    // Restore the heap property by bubbling down the new root
     heap_bubble_down(data.begin(), nodes, 0, compare);
 }
 
@@ -81,6 +90,7 @@ void heap_priority_queue<T, CONTAINER, COMPARE>::pop() {
 template <class T, class CONTAINER, class COMPARE>
 void heap_priority_queue<T, CONTAINER, COMPARE>::dump_data(std::ostream &ost) const {
     ost << "[ ";
+    // Iterate over the elements and output them to the stream
     for (size_t i = 0; i < nodes; ++i) {
         ost << data[i] << " ";
     }
@@ -88,3 +98,4 @@ void heap_priority_queue<T, CONTAINER, COMPARE>::dump_data(std::ostream &ost) co
 }
 
 #endif /* NIU_CSCI340_HEAP_PQ_H */
+

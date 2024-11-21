@@ -20,7 +20,7 @@ inline constexpr size_t heap_left(size_t node) {
  * @return Index of the right child.
  */
 inline constexpr size_t heap_right(size_t node) { 
-    return 2 * node + 2;
+    return 2 * node + 2; 
 }
 
 /**
@@ -33,7 +33,7 @@ inline constexpr size_t heap_parent(size_t node) {
 }
 
 /**
- * @brief Performs a preorder traversal of a heap and applies a function to each node.
+ * @brief Performs a preorder traversal of a heap
  * @tparam ArrayLike Type of the heap container.
  * @tparam FN Type of the function to apply.
  * @param heapdata The heap data container.
@@ -43,14 +43,14 @@ inline constexpr size_t heap_parent(size_t node) {
  */
 template <typename ArrayLike, typename FN>
 void heap_preorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
-    if (node >= heapnodes) return;
-    fn(heapdata[node]);
+    if (node >= heapnodes) return; // Stop recursion if node index is out of bounds
+    fn(heapdata[node]); // Apply the function
     heap_preorder(heapdata, heapnodes, heap_left(node), fn);
     heap_preorder(heapdata, heapnodes, heap_right(node), fn);
 }
 
 /**
- * @brief Performs an inorder traversal of a heap and applies a function to each node.
+ * @brief Performs an inorder traversal of a heap.
  * @tparam ArrayLike Type of the heap container.
  * @tparam FN Type of the function to apply.
  * @param heapdata The heap data container.
@@ -60,9 +60,9 @@ void heap_preorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
  */
 template <typename ArrayLike, typename FN>
 void heap_inorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
-    if (node >= heapnodes) return;
+    if (node >= heapnodes) return; // Stop recursion if node index is out of bounds
     heap_inorder(heapdata, heapnodes, heap_left(node), fn);
-    fn(heapdata[node]);
+    fn(heapdata[node]); 
     heap_inorder(heapdata, heapnodes, heap_right(node), fn);
 }
 
@@ -77,9 +77,9 @@ void heap_inorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
  */
 template <typename ArrayLike, typename FN>
 void heap_postorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
-    if (node >= heapnodes) return;
+    if (node >= heapnodes) return; // Stop recursion if node index is out of bounds
     heap_postorder(heapdata, heapnodes, heap_left(node), fn);
-    heap_postorder(heapdata, heapnodes, heap_right(node), fn);
+    heap_postorder(heapdata, heapnodes, heap_right(node), fn); 
     fn(heapdata[node]);
 }
 
@@ -94,7 +94,7 @@ void heap_postorder(ArrayLike heapdata, size_t heapnodes, size_t node, FN fn) {
 template <typename ArrayLike, typename FN>
 void heap_levelorder(ArrayLike &heapdata, size_t heapnodes, FN fn) {
     for (size_t i = 0; i < heapnodes; ++i) {
-        fn(heapdata[i]);
+        fn(heapdata[i]); // Apply the function to each node in the container
     }
 }
 
@@ -110,8 +110,9 @@ void heap_levelorder(ArrayLike &heapdata, size_t heapnodes, FN fn) {
 template <typename ArrayLike, typename COMPARISON>
 bool is_heap(const ArrayLike &heapdata, size_t nodes, COMPARISON compare) { 
     for (size_t i = 0; i < nodes; ++i) {
-        size_t left = heap_left(i);
-        size_t right = heap_right(i);
+        size_t left = heap_left(i); 
+        size_t right = heap_right(i); 
+        // Check if the current node satisfies the heap property with its children
         if ((left < nodes && !compare(heapdata[i], heapdata[left])) ||
             (right < nodes && !compare(heapdata[i], heapdata[right]))) {
             return false;
@@ -132,15 +133,15 @@ bool is_heap(const ArrayLike &heapdata, size_t nodes, COMPARISON compare) {
  */
 template <typename RAIterator, typename COMPARE>
 size_t heap_bubble_up(RAIterator begin, size_t nodes, size_t start, COMPARE compare) {
-    size_t swaps = 0;
+    size_t swaps = 0; // Track the number
     while (start > 0) {
-        size_t parent = heap_parent(start);
-        if (!compare(begin[parent], begin[start])) {
-            std::swap(begin[parent], begin[start]);
-            start = parent;
+        size_t parent = heap_parent(start); // Calculate the parent index
+        if (!compare(begin[parent], begin[start])) { // Check if parent violates heap property
+            std::swap(begin[parent], begin[start]); // Swap parent and current node
+            start = parent; 
             ++swaps;
         } else {
-            break;
+            break; // Stop if the heap property is done
         }
     }
     return swaps;
@@ -158,26 +159,26 @@ size_t heap_bubble_up(RAIterator begin, size_t nodes, size_t start, COMPARE comp
  */
 template <typename RAIterator, typename COMPARE>
 size_t heap_bubble_down(RAIterator begin, size_t nodes, size_t start, COMPARE compare) {
-    size_t swaps = 0;
-    size_t current = start;
+    size_t swaps = 0; 
+    size_t current = start; // Start bubbling down
 
     while (true) {
-        size_t left = heap_left(current);
-        size_t right = heap_right(current);
-        size_t smallest = current;
+        size_t left = heap_left(current); 
+        size_t right = heap_right(current); 
+        size_t smallest = current; 
 
         if (left < nodes && compare(begin[left], begin[smallest])) {
-            smallest = left;
+            smallest = left; // Update smallest if left child is smaller
         }
 
         if (right < nodes && compare(begin[right], begin[smallest])) {
-            smallest = right;
+            smallest = right; // Update smallest if right child is smaller
         }
 
-        if (smallest == current) break;
+        if (smallest == current) break; // Stop if current is already smallest
 
         std::swap(begin[current], begin[smallest]);
-        current = smallest;
+        current = smallest; 
         ++swaps;
     }
 
@@ -197,9 +198,9 @@ size_t heap_bubble_down(RAIterator begin, size_t nodes, size_t start, COMPARE co
 template <typename T, typename CONTAINER, typename COMPARISON>
 void heap_insert(CONTAINER &heapdata, size_t &nodes, T key, COMPARISON compare) {
     if (nodes >= heapdata.size()) {
-        heapdata.push_back(key);
+        heapdata.push_back(key); 
     } else {
-        heapdata[nodes] = key;
+        heapdata[nodes] = key; // Place the key in the next available position
     }
     ++nodes;
     heap_bubble_up(heapdata.begin(), nodes, nodes - 1, compare);
@@ -216,12 +217,12 @@ void heap_insert(CONTAINER &heapdata, size_t &nodes, T key, COMPARISON compare) 
  */
 template <typename CONTAINER, typename COMPARISON>
 auto heap_extract(CONTAINER &heapdata, size_t &nodes, COMPARISON compare) {
-    if (nodes == 0) throw std::runtime_error("Heap is empty");
+    if (nodes == 0) throw std::runtime_error("Heap is empty"); 
     auto root = heapdata[0];
-    heapdata[0] = heapdata[nodes - 1];
+    heapdata[0] = heapdata[nodes - 1]; // Replace the root with the last element
     --nodes;
-    heap_bubble_down(heapdata.begin(), nodes, 0, compare);
-    return root;
+    heap_bubble_down(heapdata.begin(), nodes, 0, compare); // Restore the heap property
+    return root; 
 }
 
 /**
@@ -235,9 +236,9 @@ auto heap_extract(CONTAINER &heapdata, size_t &nodes, COMPARISON compare) {
  */
 template <typename RAIterator, typename COMPARE>
 size_t heapify_in_place_up(RAIterator begin, RAIterator end, COMPARE compare) {
-    size_t swaps = 0;
+    size_t swaps = 0; 
     for (size_t i = 1; i < static_cast<size_t>(end - begin); ++i) {
-        swaps += heap_bubble_up(begin, i + 1, i, compare);
+        swaps += heap_bubble_up(begin, i + 1, i, compare); // Bubble up each element to maintain heap
     }
     return swaps;
 }
@@ -253,11 +254,11 @@ size_t heapify_in_place_up(RAIterator begin, RAIterator end, COMPARE compare) {
  */
 template <typename RAIterator, typename COMPARE>
 size_t heapify_in_place_down(RAIterator begin, RAIterator end, COMPARE compare) {
-    size_t swaps = 0;
+    size_t swaps = 0; 
     for (size_t i = static_cast<size_t>(end - begin) / 2; i-- > 0;) {
-        swaps += heap_bubble_down(begin, end - begin, i, compare);
+        swaps += heap_bubble_down(begin, end - begin, i, compare); // Bubble down each non-leaf node
     }
-    return swaps;
+    return swaps; 
 }
 
 /**
@@ -270,12 +271,14 @@ size_t heapify_in_place_down(RAIterator begin, RAIterator end, COMPARE compare) 
  */
 template <typename RAIterator, typename COMPARE>
 void heap_sort(RAIterator begin, RAIterator end, COMPARE compare) {
-    heapify_in_place_down(begin, end, compare);
+    heapify_in_place_down(begin, end, compare); // Convert the range into a heap
     for (auto it = end; it != begin; --it) {
-        std::swap(*begin, *(it - 1));
+        std::swap(*begin, *(it - 1)); // Swap the root 
         heap_bubble_down(begin, it - begin - 1, 0, compare);
     }
 }
 
 #endif /* NIU_CSCI340_HEAP_H */
+
+
 
